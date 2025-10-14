@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { BotModule } from './bot/bot.module';
-import { PixModule } from './pix/pix.module';
+import { MercadoPagoModule } from './mercado-pago/mercado-pago.module';
 
 @Module({
   imports: [
@@ -14,9 +14,10 @@ import { PixModule } from './pix/pix.module';
       useFactory: (configService: ConfigService) => ({
         token: configService.get<string>('TELEGRAM_BOT_TOKEN'),
       }),
+        inject: [ConfigService], 
     }),
     BotModule,
-    PixModule,
+    MercadoPagoModule,
   ],
   controllers: [AppController],
   providers: [AppService],
