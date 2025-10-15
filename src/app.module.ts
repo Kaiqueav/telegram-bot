@@ -11,6 +11,7 @@ import { NotificationModule } from './notification/notification.module';
 import { UserModule } from './user/user.module';
 import { Order } from './order/entities/order.entity';
 import { User } from './user/entities/user.entity';
+import path from 'path';
 
 
 @Module({
@@ -21,6 +22,10 @@ import { User } from './user/entities/user.entity';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         token: configService.get<string>('TELEGRAM_BOT_TOKEN'),
+        webhook: {
+          domain: configService.get<string>('BOT_DOMAIN'),
+          path: '/telegraf',
+        }
       }),
       
       inject: [ConfigService],
