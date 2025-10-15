@@ -7,7 +7,11 @@ import { UserModule } from 'src/user/user.module';
 
 
 @Module({
-    imports: [OrderModule, NotificationModule, UserModule],
+  imports: [
+    OrderModule,
+     NotificationModule, 
+     UserModule
+    ],
   providers: [MercadoPagoService],
   exports: [MercadoPagoService],
   controllers: [MercadoPagoController]
