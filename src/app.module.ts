@@ -33,7 +33,7 @@ import { User } from './user/entities/user.entity';
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
         entities: [Order, User],
-        synchronize: false,
+        synchronize: true,
       }),
     }),
     
