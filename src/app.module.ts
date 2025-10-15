@@ -5,6 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TelegrafModule } from 'nestjs-telegraf';
 import { BotModule } from './bot/bot.module';
 import { MercadoPagoModule } from './mercado-pago/mercado-pago.module';
+import { OrderModule } from './order/order.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { MercadoPagoModule } from './mercado-pago/mercado-pago.module';
     }),
     BotModule,
     MercadoPagoModule,
+    OrderModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
