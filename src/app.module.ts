@@ -22,6 +22,7 @@ import { User } from './user/entities/user.entity';
       useFactory: (configService: ConfigService) => ({
         token: configService.get<string>('TELEGRAM_BOT_TOKEN'),
       }),
+      
       inject: [ConfigService],
     }),
 
