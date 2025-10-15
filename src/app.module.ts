@@ -11,6 +11,9 @@ import { NotificationModule } from './notification/notification.module';
 import { UserModule } from './user/user.module';
 import { Order } from './order/entities/order.entity';
 import { User } from './user/entities/user.entity';
+import { TaskModule } from './task/task.module';
+import { AdminModule } from './admin/admin.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 
 @Module({
@@ -41,6 +44,11 @@ import { User } from './user/entities/user.entity';
     OrderModule,
     NotificationModule,
     UserModule,
+    TaskModule,
+    AdminModule,
+    ScheduleModule.forRoot(), 
+                
+  
 
   ],
   controllers: [AppController],
