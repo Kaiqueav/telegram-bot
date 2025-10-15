@@ -3,6 +3,7 @@ import { Action, Ctx, Message, On, Start, Update } from 'nestjs-telegraf';
 import { Context, Markup } from 'telegraf';
 import { MercadoPagoService } from '../mercado-pago/mercado-pago.service';
 import { OrderService } from 'src/order/order.service';
+import { UserService } from 'src/user/user.service';
 
 
 const plans = [
@@ -31,13 +32,19 @@ const plans = [
 export class BotUpdate {
   private readonly logger = new Logger(BotUpdate.name);
   
-  constructor(private readonly mercadoPagoService: MercadoPagoService,
-    private readonly orderService: OrderService
+  constructor(
+    private readonly mercadoPagoService: MercadoPagoService,
+    private readonly orderService: OrderService,
+    private readonly userService: UserService
   ) {}
 
   @Start()
   async startCommand(@Ctx() ctx: Context) {
+   
     const from = ctx.from;
+     if (from) {
+      await this.userService.findOrCreate(from.id, from.first_name, from.username);
+    } 
     const welcomeMessage = from?.first_name
       ? `Olá, ${from.first_name}! Sou seu assistente virtual. Como posso ajudar?`
       : 'Olá! Sou seu assistente virtual. Como posso ajudar?';
@@ -81,10 +88,16 @@ export class BotUpdate {
       return;
     }
     
+      
     await ctx.reply(`Você escolheu o *${chosenPlan.name}*. Aguarde, estou gerando sua cobrança PIX...`, { parse_mode: 'Markdown' });
     
     try {
+      
       const charge = await this.mercadoPagoService.createPixCharge(chosenPlan.price);
+      
+      const chatId = ctx.chat.id;
+      await this.orderService.create(charge.paymentId, chatId, chosenPlan.id);
+      this.logger.log(`Order created for chatId ${chatId} with paymentId ${charge.paymentId}`);
       
       const buffer = Buffer.from(charge.qrCodeBase64, 'base64');
       
@@ -98,9 +111,9 @@ export class BotUpdate {
 
     } catch (error) {
       this.logger.error(`Erro ao gerar PIX para o plano ${planId}`, error);
-      await ctx
-      .reply('Desculpe, não consegui gerar sua cobrança. Tente novamente mais tarde.');
+      await ctx.reply('Desculpe, não consegui gerar sua cobrança. Tente novamente mais tarde.');
     }
+
   }
 
  
