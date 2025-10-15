@@ -24,7 +24,12 @@ import { ScheduleModule } from '@nestjs/schedule';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         token: configService.get<string>('TELEGRAM_BOT_TOKEN'),
+        webhook: {
+          domain: configService.get<string>('BOT_DOMAIN'),
+          path: '/telegraf',
+        }
       }),
+      
       inject: [ConfigService],
     }),
 
@@ -35,7 +40,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
         entities: [Order, User],
-        synchronize: true,
+        synchronize: false,
       }),
     }),
     
