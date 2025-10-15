@@ -39,7 +39,7 @@ describe('TasksService', () => {
     notificationService = module.get<NotificationService>(NotificationService);
   });
 
-  // Limpa os mocks após cada teste
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -67,16 +67,13 @@ describe('TasksService', () => {
 
       await taskService.handleExpiredSubscriptions();
 
-      // Verifica se os serviços corretos foram chamados
       expect(userService.findExpiredUsers).toHaveBeenCalledTimes(1);
       expect(notificationService.removeUserFromGroup).toHaveBeenCalledTimes(2);
       expect(userService.save).toHaveBeenCalledTimes(2);
 
-      // Verifica se a remoção foi chamada com os IDs corretos
       expect(notificationService.removeUserFromGroup).toHaveBeenCalledWith('-1001234567890', 1);
       expect(notificationService.removeUserFromGroup).toHaveBeenCalledWith('-1001234567890', 2);
 
-      // Verifica se os dados dos utilizadores foram limpos antes de salvar
       expect(userService.save).toHaveBeenCalledWith(
         expect.objectContaining({
           chatId: 1,
