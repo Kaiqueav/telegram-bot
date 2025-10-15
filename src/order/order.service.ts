@@ -1,45 +1,35 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-
-export interface Order {
-  paymentId: number;
-  chatId: number;
-  planId: string;
-  status: 'pending' | 'completed' | 'failed';
-  createdAt: Date;
-}
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Order } from './entities/order.entity';
 
 @Injectable()
 export class OrderService {
+  constructor(
+    @InjectRepository(Order)
+    private orderRepository: Repository<Order>,
+  ) {}
 
-  private readonly orders: Order[] = [];
-
-  create(paymentId: number, chatId: number, planId: string): Order {
-    const newOrder: Order = {
+  async create(paymentId: number, chatId: number, planId: string): Promise<Order> {
+    const newOrder = this.orderRepository.create({
       paymentId,
       chatId,
       planId,
       status: 'pending',
-      createdAt: new Date(),
-    };
-    this.orders.push(newOrder);
-    return newOrder;
+    });
+    return this.orderRepository.save(newOrder);
   }
 
-  findByPaymentId(paymentId: number): Order | null {
-    const order = this.orders.find(o => o.paymentId === Number(paymentId));
-    if (!order) {
-      
-      return null;
-    }
-    return order;
+  async findByPaymentId(paymentId: number): Promise<Order | null> {
+    return this.orderRepository.findOneBy({ paymentId });
   }
 
-  updateStatus(paymentId: number, status: 'completed' | 'failed'): Order {
-    const order = this.findByPaymentId(paymentId);
+  async updateStatus(paymentId: number, status: 'completed' | 'failed'): Promise<Order> {
+    const order = await this.findByPaymentId(paymentId);
     if (!order) {
       throw new NotFoundException(`Order with paymentId ${paymentId} not found.`);
     }
     order.status = status;
-    return order;
+    return this.orderRepository.save(order);
   }
 }
