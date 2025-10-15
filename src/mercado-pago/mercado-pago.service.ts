@@ -27,10 +27,7 @@ export class MercadoPagoService {
   async createPixCharge(valor: number, email = 'user@test.com'): Promise<PixChargeResponse> {
     try {
       this.logger.log(`Creating PIX charge for amount: ${valor}`);
-      
-  
       const payment = new Payment(this.client);
-
       const body = {
         transaction_amount: valor, 
         description: 'Produto/Serviço via Bot Telegram', 
@@ -41,13 +38,10 @@ export class MercadoPagoService {
  
       };
 
-    
       const response = await payment.create({ body });
       this.logger.log(`PIX charge created successfully with ID: ${response.id}`);
-
-    
       const pixData = response.point_of_interaction.transaction_data;
-
+      
       return {
         paymentId: response.id, 
         qrCodeBase64: pixData.qr_code_base64, 
