@@ -57,4 +57,17 @@ export class NotificationService {
       // Possíveis erros: bot não é admin, ID do grupo está errado, etc.
     }
   }
+   async removeUserFromGroup(groupId: string, userId: number): Promise<void> {
+    try {
+      //banindo
+      await this.bot.telegram.banChatMember(groupId, userId);
+      // retirando o ban
+      await this.bot.telegram.unbanChatMember(groupId, userId);
+      
+      this.logger.log(`Utilizador ${userId} removido com sucesso do grupo ${groupId}.`);
+    } catch (error) {
+      this.logger.error(`Falha ao remover o utilizador ${userId} do grupo ${groupId}.`, error);
+      throw error;
+    }
+  }
 }
