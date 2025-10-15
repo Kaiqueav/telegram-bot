@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MercadoPagoService } from './mercado-pago.service';
 import { MercadoPagoController } from './mercado-pago.controller';
 import { OrderModule } from 'src/order/order.module';
@@ -8,7 +8,7 @@ import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
-    OrderModule,
+     forwardRef(() => OrderModule),
      NotificationModule, 
      UserModule
     ],
