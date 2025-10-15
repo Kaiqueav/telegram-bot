@@ -60,4 +60,15 @@ export class MercadoPagoService {
       throw new InternalServerErrorException('Failed to generate PIX charge.');
     }
   }
+  async getPaymentStatus(paymentId: number): Promise<string> {
+        try {
+            const payment = new Payment(this.client);
+            const paymentDetails = await payment.get({ id: paymentId });
+            this.logger.log(`Status for payment ${paymentId} is ${paymentDetails.status}`);
+            return paymentDetails.status; // ex: "approved", "pending", "rejected"
+        } catch (error) {
+            this.logger.error(`Failed to get status for payment ${paymentId}`, error);
+            throw new InternalServerErrorException('Failed to get payment status.');
+        }
+    }
 }
