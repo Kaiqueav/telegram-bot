@@ -1,61 +1,40 @@
-import { Body, Controller, Logger, Post, Res } from '@nestjs/common';
-import { Response } from 'express';
-import { MercadoPagoService } from './mercado-pago.service';
-import { OrderService } from '../order/order.service';
-import { NotificationService } from '../notification/notification.service';
-import { UserService } from '../user/user.service';
-const plans = [
-    { id: 'basic', name: 'Plano Básico' },
-    { id: 'pro', name: 'Plano Pro' },
-    { id: 'premium', name: 'Plano Premium' },
-];
+// Copie e cole este código em src/mercado-pago/mercado-pago.controller.ts
+
+import { Body, Controller, HttpCode, Logger, Post } from '@nestjs/common';
 
 @Controller('mercadopago')
 export class MercadoPagoController {
   private readonly logger = new Logger(MercadoPagoController.name);
 
-  constructor(
-   //private readonly mercadoPagoService: MercadoPagoService,
-    //private readonly orderService: OrderService,
-    //private readonly notificationService: NotificationService,
-    //private readonly userService: UserService,
-
-  ) {}
+  // O construtor vazio está correto para este modo de debug.
+  constructor() {}
 
   @Post('webhook')
-  async handleWebhook(@Body() body: any, @Res() res: Response) {
-   this.logger.log('>>>>>>>>>> WEBHOOK ENDPOINT ATINGIDO <<<<<<<<<<');
-
-    // 2. VERIFICA SE O BODY EXISTE E LOGA O CONTEÚDO
-    if (body) {
-      // Usamos JSON.stringify para garantir que objetos aninhados sejam visíveis.
-      this.logger.log(`CONTEÚDO DO BODY: ${JSON.stringify(body, null, 2)}`);
-    } else {
-      this.logger.warn('ALERTA: Webhook recebido com BODY VAZIO ou NULO.');
-    }
-
-    // 3. LOG FINAL ANTES DE ENCERRAR
-    this.logger.log('>>>>>>>>>> PROCESSAMENTO DO WEBHOOK FINALIZADO (DEBUG MODE) <<<<<<<<<<');
-  }
-
-  
-  /*private async grantAccessToService(chatId: number, planId: string) {
-    this.logger.log(`GRANTING ACCESS: User ${chatId} purchased plan ${planId}.`);
+  @HttpCode(200)
+  // 1. O parâmetro agora se chama "rawBody" e é do tipo Buffer.
+  // 2. Removemos o "@Res() res: Response".
+  async handleWebhook(@Body() rawBody: Buffer) {
     try {
-    
-      await this.userService.grantPlanAccess(chatId, planId);
-      this.logger.log(`User ${chatId} access rights saved to database.`);
+      this.logger.log('>>>>>>>>>> WEBHOOK ENDPOINT ATINGIDO <<<<<<<<<<');
 
-  
-      if (planId === 'pro' || planId === 'premium') {
-        await this.notificationService.sendPrivateGroupInvite(chatId);
+      if (!rawBody || rawBody.length === 0) {
+        this.logger.warn('ALERTA: Webhook recebido com BODY VAZIO.');
+        return;
       }
       
-  
+      const bodyAsString = rawBody.toString('utf-8');
+      this.logger.log(`CONTEÚDO DO BODY (RAW): ${bodyAsString}`);
+
+      // 3. A nova variável "parsedBody" evita o conflito de nomes.
+      const parsedBody = JSON.parse(bodyAsString);
+
+      this.logger.log(`BODY APÓS PARSE: ${JSON.stringify(parsedBody, null, 2)}`);
+      
+      this.logger.log('>>>>>>>>>> PROCESSAMENTO DO WEBHOOK FINALIZADO (RAW DEBUG) <<<<<<<<<<');
 
     } catch (error) {
-      this.logger.error(`Error in grantAccessToService for chatId ${chatId}`, error);
-
+      this.logger.error('!!!!!! ERRO FATAL AO PROCESSAR O WEBHOOK !!!!!!');
+      this.logger.error(`Erro: ${error.message}`, error.stack);
     }
-  }*/
+  }
 }
