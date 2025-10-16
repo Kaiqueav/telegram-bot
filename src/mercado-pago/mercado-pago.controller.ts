@@ -25,10 +25,17 @@ export class MercadoPagoController {
   @Post('webhook')
   async handleWebhook(@Body() body: any, @Res() res: Response) {
     res.status(200).send('OK');
-
-    if (body.type === 'payment' && body.action === 'payment.updated') {
+    try {
+      this.logger.log('Webhook received from Mercado Pago');
+ 
+      if (body?.type !== 'payment' || !body.data?.id) {
+        this.logger.warn('Received webhook is not a valid payment notification or is missing data.id. Ignoring.');
+        return;
+      }
+      
       const paymentId = body.data.id;
-      this.logger.log(`Webhook received for paymentId: ${paymentId}`);
+      this.logger.log(`Processing webhook for paymentId: ${paymentId}`);
+
 
       const order = await this.orderService.findByPaymentId(paymentId);
       if (!order || order.status === 'completed') {
@@ -47,7 +54,12 @@ export class MercadoPagoController {
         await this.notificationService.sendPaymentConfirmation(order.chatId, planName);
 
         await this.grantAccessToService(order.chatId, order.planId);
+      } else {
+        this.logger.log(`Payment ${paymentId} status is '${status}'. Not approved yet.`);
       }
+
+    } catch (error) {
+      this.logger.error(`!!!!! FATAL ERROR while processing webhook !!!!!`, error.stack);
     }
   }
 
