@@ -24,29 +24,28 @@ export class MercadoPagoController {
 
   @Post('webhook')
   async handleWebhook(@Body() body: any, @Res() res: Response) {
-    res.status(200).send('OK');
-    try {
-      this.logger.log('Webhook received from Mercado Pago');
- 
-      if (body?.type !== 'payment' || !body.data?.id) {
-        this.logger.warn('Received webhook is not a valid payment notification or is missing data.id. Ignoring.');
-        return;
-      }
-      
-      const paymentId = body.data.id;
-      this.logger.log(`Processing webhook for paymentId: ${paymentId}`);
+   try {
+      this.logger.log('====== WEBHOOK RECEBIDO ======');
+      this.logger.log(`BODY: ${JSON.stringify(body, null, 2)}`);
 
+      if (body?.type !== 'payment' || !body.data?.id) {
+        this.logger.warn('Webhook não parece ser uma notificação de pagamento válida. Ignorando.');
+        return; // Sai silenciosamente se o corpo não for o esperado
+      }
+
+      const paymentId = body.data.id;
+      this.logger.log(`Processando notificação para o paymentId: ${paymentId}`);
 
       const order = await this.orderService.findByPaymentId(paymentId);
       if (!order || order.status === 'completed') {
-        this.logger.warn(`Order not found or already completed for paymentId ${paymentId}. Ignoring webhook.`);
+        this.logger.warn(`Pedido não encontrado ou já completo para o paymentId ${paymentId}. Ignorando.`);
         return;
       }
       
       const status = await this.mercadoPagoService.getPaymentStatus(paymentId);
 
       if (status === 'approved') {
-        this.logger.log(`Payment ${paymentId} CONFIRMED as 'approved'.`);
+        this.logger.log(`Pagamento ${paymentId} CONFIRMADO como 'approved'.`);
         await this.orderService.updateStatus(paymentId, 'completed');
         
         const plan = plans.find(p => p.id === order.planId);
@@ -55,11 +54,15 @@ export class MercadoPagoController {
 
         await this.grantAccessToService(order.chatId, order.planId);
       } else {
-        this.logger.log(`Payment ${paymentId} status is '${status}'. Not approved yet.`);
+         this.logger.log(`Status do pagamento ${paymentId} é '${status}'. Ainda não aprovado.`);
       }
 
+      this.logger.log('====== WEBHOOK PROCESSADO COM SUCESSO ======');
+
     } catch (error) {
-      this.logger.error(`!!!!! FATAL ERROR while processing webhook !!!!!`, error.stack);
+      // Se qualquer coisa dentro do 'try' falhar, o código abaixo será executado
+      this.logger.error('!!!!!! ERRO FATAL AO PROCESSAR O WEBHOOK !!!!!!');
+      this.logger.error(`Erro: ${error.message}`, error.stack);
     }
   }
 
