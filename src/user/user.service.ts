@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { BuyerDto } from './dto/buyer.dto';
 
 @Injectable()
 export class UserService {
@@ -30,4 +31,47 @@ export class UserService {
     
     return this.userRepository.save(user);
   }
+    async save(user: User): Promise<User> {
+      return this.userRepository.save(user);
+    }
+    
+
+    async getBuyersForAdminPanel(): Promise<BuyerDto[]> {
+      const allUsers = await this.userRepository.find();
+      const now = new Date();
+
+      return allUsers.map(user => {
+        let subscriptionStatus: BuyerDto['subscriptionStatus'] = 'never_subscribed';
+        let daysRemaining: number | undefined = undefined;
+
+        if (user.accessExpiresAt) {
+          if (user.accessExpiresAt > now) {
+            subscriptionStatus = 'active';
+            const diffTime = user.accessExpiresAt.getTime() - now.getTime();
+            daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          } else {
+            subscriptionStatus = 'expired'; 
+            daysRemaining = 0;
+          }
+        }
+
+        return {
+          chatId: user.chatId,
+          firstName: user.firstName,
+          username: user.username,
+          currentPlanId: user.currentPlanId,
+          accessExpiresAt: user.accessExpiresAt,
+          subscriptionStatus,
+          daysRemaining,
+        };
+      });
+    }
+     async findExpiredUsers(): Promise<User[]> {
+    return this.userRepository.find({
+      where: {
+        accessExpiresAt: LessThan(new Date()),
+      },
+    });
+}
+
 }

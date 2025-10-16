@@ -1,5 +1,9 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
 
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+}
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
@@ -20,7 +24,13 @@ export class User {
 
   @Column({ type: 'timestamp with time zone', nullable: true })
   accessExpiresAt?: Date;
-
+  
+  @Column({
+      type: 'enum',
+      enum: UserRole,
+      default: UserRole.USER,
+    })
+  role: UserRole;
   @CreateDateColumn()
   createdAt: Date;
 
