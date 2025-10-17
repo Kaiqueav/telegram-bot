@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TelegrafModule } from 'nestjs-telegraf'; 
 import { MercadoPagoModule } from './mercado-pago/mercado-pago.module';
 import { OrderModule } from './order/order.module';
 import { NotificationModule } from './notification/notification.module';
@@ -11,6 +12,16 @@ import { User } from './user/entities/user.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
+    TelegrafModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        token: configService.get<string>('TELEGRAM_BOT_TOKEN'),
+
+      }),
+      inject: [ConfigService],
+    }),
+   
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -18,10 +29,10 @@ import { User } from './user/entities/user.entity';
         type: 'postgres',
         url: configService.get<string>('DATABASE_URL'),
         entities: [Order, User],
-        synchronize: true, 
+        synchronize: true,
       }),
     }),
-   
+    
     MercadoPagoModule,
     OrderModule,
     NotificationModule,
