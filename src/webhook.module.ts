@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TelegrafModule } from 'nestjs-telegraf'; 
 import { MercadoPagoModule } from './mercado-pago/mercado-pago.module';
 import { OrderModule } from './order/order.module';
 import { NotificationModule } from './notification/notification.module';
@@ -12,19 +11,8 @@ import { User } from './user/entities/user.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+  
 
-    TelegrafModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        token: configService.get<string>('TELEGRAM_BOT_TOKEN'),
-        webhook: {
-          domain: 'dummy-domain.com', 
-          path: '/dummy-webhook',
-        },
-      }),
-      inject: [ConfigService],
-    }),
-   
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -1,40 +1,43 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectBot } from 'nestjs-telegraf';
 import { Telegraf } from 'telegraf';
 
 @Injectable()
-export class NotificationService {
+export class NotificationService implements OnModuleInit {
   private readonly logger = new Logger(NotificationService.name);
+  private bot: Telegraf; 
+  constructor(private readonly configService: ConfigService) {}
 
-
-  constructor(@InjectBot() 
-    private readonly bot: Telegraf,
-    private readonly configService: ConfigService) {}
+  onModuleInit() {
+   
+    const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
+    if (!token) {
+      throw new Error('TELEGRAM_BOT_TOKEN not found in environment variables.');
+    }
+    this.bot = new Telegraf(token);
+    this.logger.log('Telegraf client initialized for sending messages.');
+  }
 
   async sendPaymentConfirmation(chatId: number, planName: string) {
     try {
       const message = `✅ Pagamento confirmado!\n\nSeu *${planName}* foi ativado com sucesso. Obrigado por sua compra!`;
-      
       await this.bot.telegram.sendMessage(chatId, message, {
         parse_mode: 'Markdown',
       });
-      
       this.logger.log(`Confirmation message sent to chatId ${chatId}`);
     } catch (error) {
-      
       this.logger.error(`Failed to send message to chatId ${chatId}`, error);
     }
   }
+
   async sendPrivateGroupInvite(chatId: number): Promise<void> {
     try {
       const groupId = this.configService.get<string>('PRIVATE_GROUP_ID');
       if (!groupId) {
-        this.logger.error('PRIVATE_GROUP_ID not set in environment variables.');
+        this.logger.error('PRIVATE_GROUP_ID not set.');
         return;
       }
 
-     
       const inviteLink = await this.bot.telegram.createChatInviteLink(groupId, {
         expire_date: Math.floor(Date.now() / 1000) + 3600, 
         member_limit: 1, 
@@ -50,23 +53,19 @@ export class NotificationService {
           inline_keyboard: [[{ text: 'Entrar no Grupo', url: inviteLink.invite_link }]],
         },
       });
-
       this.logger.log(`Invite link sent to chatId ${chatId}`);
     } catch (error) {
       this.logger.error(`Failed to send invite link to chatId ${chatId}`, error);
-      // Possíveis erros: bot não é admin, ID do grupo está errado, etc.
     }
   }
-   async removeUserFromGroup(groupId: string, userId: number): Promise<void> {
+
+  async removeUserFromGroup(groupId: string, userId: number): Promise<void> {
     try {
-      //banindo
       await this.bot.telegram.banChatMember(groupId, userId);
-      // retirando o ban
       await this.bot.telegram.unbanChatMember(groupId, userId);
-      
-      this.logger.log(`Utilizador ${userId} removido com sucesso do grupo ${groupId}.`);
+      this.logger.log(`User ${userId} removed from group ${groupId}.`);
     } catch (error) {
-      this.logger.error(`Falha ao remover o utilizador ${userId} do grupo ${groupId}.`, error);
+      this.logger.error(`Failed to remove user ${userId} from group ${groupId}.`, error);
       throw error;
     }
   }
