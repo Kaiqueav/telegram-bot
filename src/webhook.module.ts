@@ -17,7 +17,10 @@ import { User } from './user/entities/user.entity';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         token: configService.get<string>('TELEGRAM_BOT_TOKEN'),
-
+        webhook: {
+          domain: 'dummy-domain.com', 
+          path: '/dummy-webhook',
+        },
       }),
       inject: [ConfigService],
     }),
