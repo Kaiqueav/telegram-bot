@@ -4,9 +4,24 @@ import * as express from 'express';
 import { getBotToken } from 'nestjs-telegraf';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    
+    bodyParser: false,
+  });
+
+  const rawBodyMiddleware = express.raw({ type: '*/*' });
+  const jsonBodyMiddleware = express.json();
+
+  app.use((req, res, next) => {
+    if (req.url === '/mercadopago/webhook') {
+      
+      rawBodyMiddleware(req, res, next);
+    } else {
+
+      jsonBodyMiddleware(req, res, next);
+    }
+  });
   
-  app.use('/mercadopago/webhook', express.raw({ type: '*/*' }));
   const bot = app.get(getBotToken());
   app.use(bot.webhookCallback('/telegraf'));
 
