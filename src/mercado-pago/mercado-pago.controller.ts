@@ -32,10 +32,11 @@ export class MercadoPagoController {
         return;
       }
       
-      const bodyAsString = rawBody.toString('utf-8');
+      const bodyAsString = rawBody.toString('utf-8');    
+      this.logger.log(`Webhook do Mercado Pago recebido: ${bodyAsString}`);
       const body = JSON.parse(bodyAsString);
 
-      this.logger.log(`Webhook do Mercado Pago recebido: ${bodyAsString}`);
+  
 
       if (body?.type === 'payment' && body.data?.id) {
         const paymentId = body.data.id;
